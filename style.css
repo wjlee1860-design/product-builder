@@ -1,1 +1,255 @@
-/* Add styles here */
+:root {
+    --primary-color: #00aaff;
+    --secondary-color: #aa00ff;
+    --background-color: #121212;
+    --surface-color: rgba(255, 255, 255, 0.05);
+    --on-surface-color: #ffffff;
+    --glow-color: rgba(0, 170, 255, 0.7);
+
+    --font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* General Styles & Resets */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--background-color);
+    color: var(--on-surface-color);
+    overflow-x: hidden;
+    background-image: radial-gradient(circle at 10% 20%, rgba(0, 170, 255, 0.1), transparent 30%),
+                      radial-gradient(circle at 90% 80%, rgba(170, 0, 255, 0.1), transparent 30%);
+    background-attachment: fixed;
+}
+
+a {
+    text-decoration: none;
+    color: var(--primary-color);
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: var(--secondary-color);
+}
+
+/* Header */
+header {
+    background-color: rgba(18, 18, 18, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 1rem 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.logo a {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--on-surface-color);
+    letter-spacing: -1px;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+}
+
+nav ul li {
+    margin-left: 3rem;
+}
+
+nav ul li a {
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+/* Hero Section */
+.hero {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 8rem 2rem;
+    min-height: 80vh;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+}
+
+.hero-content {
+    max-width: 800px;
+}
+
+.hero-content h1 {
+    font-size: 4rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+    color: #fff;
+}
+
+.hero-content p {
+    font-size: 1.25rem;
+    margin-bottom: 2.5rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.cta-button {
+    background: var(--on-surface-color);
+    color: var(--background-color);
+    padding: 1rem 2.5rem;
+    border-radius: 50px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+}
+
+.cta-button:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px var(--glow-color);
+    color: var(--primary-color);
+}
+
+/* Sections */
+.features, .pricing, .contact {
+    padding: 6rem 2rem;
+    text-align: center;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+section h2 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 4rem;
+}
+
+/* Glassmorphism Cards */
+.feature, .pricing-plan {
+    background: var(--surface-color);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 2.5rem;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature:hover, .pricing-plan:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 0 40px var(--glow-color);
+}
+
+/* Features Section */
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.feature i {
+    font-size: 3rem;
+    background: -webkit-linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1.5rem;
+}
+
+.feature h3 {
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+}
+
+/* Pricing Section */
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2.5rem;
+    align-items: center;
+}
+
+.pricing-plan.recommended {
+    border: 2px solid var(--primary-color);
+    transform: scale(1.05);
+}
+
+.pricing-plan h3 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.price {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 1.5rem;
+}
+
+.price span {
+    font-size: 1rem;
+    font-weight: normal;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.pricing-plan ul {
+    list-style: none;
+    margin-bottom: 2.5rem;
+}
+
+.pricing-plan ul li {
+    margin-bottom: 1rem;
+}
+
+.pricing-plan .cta-button {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+.pricing-plan .cta-button:hover {
+    background: #fff;
+    color: var(--primary-color);
+    box-shadow: 0 0 25px var(--glow-color);
+}
+
+/* Contact Section */
+.contact p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+}
+
+/* Footer */
+footer {
+    background-color: #1a1a1a;
+    color: rgba(255, 255, 255, 0.7);
+    text-align: center;
+    padding: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    nav ul {
+        display: none; /* Or implement a hamburger menu */
+    }
+
+    .hero-content h1 {
+        font-size: 2.8rem;
+    }
+
+    section h2 {
+        font-size: 2.5rem;
+    }
+}
