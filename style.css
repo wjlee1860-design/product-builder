@@ -173,7 +173,7 @@ header {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto auto 1fr;
-    gap: 1rem;
+    gap: 1.5rem; /* Increased gap */
     height: 100%;
 }
 
@@ -214,6 +214,23 @@ header {
     margin-bottom: 0.5rem;
     font-weight: 600;
 }
+
+/* Style for file inputs */
+input[type="file"] {
+    padding: 0.8rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color-dark);
+    background-color: var(--input-bg-dark);
+    color: var(--text-color-dark);
+    cursor: pointer;
+}
+
+.light-mode input[type="file"] {
+     border: 1px solid var(--border-color-light);
+    background-color: var(--input-bg-light);
+    color: var(--text-color-light);
+}
+
 
 .generator-output {
     position: relative;

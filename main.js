@@ -19,27 +19,39 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- YAML Generator --- //
-    const htmlInput = document.getElementById('html-input');
+    const htmlFileInput = document.getElementById('html-file-input');
+    const cssFileInput = document.getElementById('css-file-input');
     const generateBtn = document.getElementById('generate-yaml-btn');
     const yamlOutput = document.getElementById('yaml-output');
     const downloadBtn = document.getElementById('download-yaml-btn');
     const copyYamlBtn = document.getElementById('copy-yaml-btn');
 
-    generateBtn.addEventListener('click', () => {
-        const htmlCode = htmlInput.value;
-        if (!htmlCode.trim()) {
-            alert('HTML 코드를 입력하세요.');
+    generateBtn.addEventListener('click', async () => {
+        const htmlFile = htmlFileInput.files[0];
+        const cssFile = cssFileInput.files[0];
+
+        if (!htmlFile) {
+            alert('HTML 파일을 선택하세요.');
             return;
         }
 
         try {
-            const yamlCode = convertToYaml(htmlCode);
+            let htmlContent = await readFileAsText(htmlFile);
+            if (cssFile) {
+                const cssContent = await readFileAsText(cssFile);
+                // Inject CSS into a style tag in the HTML head
+                const styleTag = `<style>${cssContent}</style>`;
+                htmlContent = htmlContent.replace("</head>", `${styleTag}</head>`);
+            }
+
+            const yamlCode = convertToYaml(htmlContent);
             yamlOutput.value = yamlCode;
             downloadBtn.disabled = false;
             copyYamlBtn.disabled = false;
+
         } catch (error) {
             console.error("YAML Generation Error:", error);
-            alert("YAML 생성에 실패했습니다. HTML 형식을 확인해주세요.");
+            alert(`YAML 생성에 실패했습니다: ${error.message}`);
             yamlOutput.value = `오류: ${error.message}`;
             downloadBtn.disabled = true;
             copyYamlBtn.disabled = true;
@@ -65,6 +77,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsText(file);
+    });
+}
+
 function copyToClipboard(button, text) {
     navigator.clipboard.writeText(text).then(() => {
         const originalText = button.textContent;
@@ -83,41 +104,46 @@ function copyToClipboard(button, text) {
 function convertToYaml(htmlString) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, "text/html");
-    const element = doc.body.firstChild;
+    
+    // Find the first element in the body, or a specific target element
+    const element = doc.body.firstElementChild;
 
     if (!element || !(element instanceof HTMLElement)) {
-        throw new Error("유효한 HTML 요소를 찾을 수 없습니다.");
+        throw new Error("변환할 유효한 HTML 요소를 찾을 수 없습니다. <body> 태그 안에 요소가 있는지 확인하세요.");
     }
 
-    const componentName = "GeneratedComponent"; // Or derive from element
+    // Get computed styles
+    const computedStyle = window.getComputedStyle(element);
+
+    const componentName = "GeneratedComponent";
     let yaml = `${componentName}:\n`;
     
-    // --- Basic Properties ---
     yaml += `    Text: |=\n        ="${element.textContent.trim()}"\n`;
 
-    // --- Style Properties ---
-    const style = element.style;
     const properties = {
-        Fill: `ColorValue("${style.backgroundColor || 'transparent'}")`,
-        Color: `ColorValue("${style.color || 'black'}")`,
-        Width: style.width ? parseInt(style.width) : 180,
-        Height: style.height ? parseInt(style.height) : 60,
-        PaddingTop: parseInt(style.paddingTop) || parseInt(style.padding) || 10,
-        PaddingRight: parseInt(style.paddingRight) || parseInt(style.padding) || 10,
-        PaddingBottom: parseInt(style.paddingBottom) || parseInt(style.padding) || 10,
-        PaddingLeft: parseInt(style.paddingLeft) || parseInt(style.padding) || 10,
-        BorderThickness: style.border ? parseInt(style.border) : 0,
-        BorderStyle: style.borderStyle ? `BorderStyle.${style.borderStyle}` : `BorderStyle.Solid`,
-        BorderColor: `ColorValue("${style.borderColor || 'transparent'}")`,
-        RadiusTopLeft: parseInt(style.borderTopLeftRadius) || 0,
-        RadiusTopRight: parseInt(style.borderTopRightRadius) || 0,
-        RadiusBottomLeft: parseInt(style.borderBottomLeftRadius) || 0,
-        RadiusBottomRight: parseInt(style.borderBottomRightRadius) || 0,
+        Fill: `ColorValue("${computedStyle.backgroundColor || 'transparent'}")`,
+        Color: `ColorValue("${computedStyle.color || 'black'}")`,
+        Width: parseInt(computedStyle.width) || 180,
+        Height: parseInt(computedStyle.height) || 60,
+        PaddingTop: parseInt(computedStyle.paddingTop) || 0,
+        PaddingRight: parseInt(computedStyle.paddingRight) || 0,
+        PaddingBottom: parseInt(computedStyle.paddingBottom) || 0,
+        PaddingLeft: parseInt(computedStyle.paddingLeft) || 0,
+        BorderThickness: parseInt(computedStyle.borderWidth) || 0,
+        BorderStyle: `BorderStyle.${computedStyle.borderStyle}`,
+        BorderColor: `ColorValue("${computedStyle.borderColor || 'transparent'}")`,
+        RadiusTopLeft: parseInt(computedStyle.borderTopLeftRadius) || 0,
+        RadiusTopRight: parseInt(computedStyle.borderTopRightRadius) || 0,
+        RadiusBottomLeft: parseInt(computedStyle.borderBottomLeftRadius) || 0,
+        RadiusBottomRight: parseInt(computedStyle.borderBottomRightRadius) || 0,
+        FontWeight: `FontWeight.${computedStyle.fontWeight > 600 ? 'Bold' : (computedStyle.fontWeight < 500 ? 'Normal' : 'Semibold')}`,
+        FontSize: parseInt(computedStyle.fontSize) || 15,
     };
 
     for (const [key, value] of Object.entries(properties)) {
-        if (value !== null && value !== undefined && value !== '' && value !== 0 && value !== `ColorValue("transparent")`) {
-            yaml += `    ${key}: =${value}\n`;
+        // Add property if it has a meaningful value
+        if (value && value !== 0 && value !== `ColorValue("transparent")` && value !== `ColorValue("rgba(0, 0, 0, 0)")`) {
+             yaml += `    ${key}: =${value}\n`;
         }
     }
 

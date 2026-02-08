@@ -23,25 +23,23 @@
     <main class="bento-container">
         <div id="generator" class="bento-card card-large">
             <div class="card-header">
-                <h3>HTML/CSS to Power Apps YAML Generator</h3>
+                <h3>HTML/CSS File to Power Apps YAML Generator</h3>
             </div>
             <div class="card-content generator-grid">
                 <div class="generator-input">
-                    <label for="html-input">HTML Code</label>
-                    <textarea id="html-input" placeholder="<div style='''background-color: #0078d4; color: white;'''>
-  My Power Apps Button
-</div>"></textarea>
+                    <label for="html-file-input">HTML File</label>
+                    <input type="file" id="html-file-input" accept=".html, .htm">
                 </div>
                 <div class="generator-input">
-                    <label for="css-input">CSS Code (Optional)</label>
-                    <textarea id="css-input" placeholder="/* 추가적인 CSS를 여기에 입력하세요 (미구현) */" disabled></textarea>
+                    <label for="css-file-input">CSS File (Optional)</label>
+                    <input type="file" id="css-file-input" accept=".css">
                 </div>
                 <div class="generator-controls">
                     <button id="generate-yaml-btn">Generate YAML</button>
                 </div>
                 <div class="generator-output">
                     <label for="yaml-output">Generated Power Apps YAML</label>
-                    <textarea id="yaml-output" readonly placeholder="Power Apps에 붙여넣을 YAML 코드가 여기에 생성됩니다."></textarea>
+                    <textarea id="yaml-output" readonly placeholder="Select files and click Generate. The YAML code will appear here."></textarea>
                     <button id="download-yaml-btn" class="copy-btn" disabled>Download YAML</button>
                     <button id="copy-yaml-btn" class="copy-btn" disabled>Copy YAML</button>
                 </div>
