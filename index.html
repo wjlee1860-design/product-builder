@@ -3,81 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Power Apps YAML Code Generator</title>
+    <title>HTML to Power Apps YAML Converter</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="dark-mode">
-    <header>
-        <nav class="gnb">
-            <a href="#" class="logo">Power-Up</a>
-            <ul>
-                <li><a href="#">홈</a></li>
-                <li><a href="#generator">YAML 생성기</a></li>
-                <li><a href="#video-guide">코드 가이드</a></li>
-                <li><a href="#">문의 게시판</a></li>
-            </ul>
-            <button id="theme-toggle">Light Mode</button>
-        </nav>
-    </header>
+<body>
+    <div class="container">
+        <header>
+            <h1>HTML to Power Apps YAML Converter</h1>
+            <p>Paste your HTML and CSS code or upload files to generate Power Apps YAML.</p>
+        </header>
 
-    <main class="bento-container">
-        <div id="generator" class="bento-card card-large">
-            <div class="card-header">
-                <h3>HTML/CSS File to Power Apps YAML Generator</h3>
-            </div>
-            <div class="card-content generator-grid">
-                <div class="generator-input">
-                    <label for="html-file-input">HTML File</label>
-                    <input type="file" id="html-file-input" accept=".html, .htm">
+        <main class="converter-grid">
+            <!-- Input Section -->
+            <div class="grid-panel">
+                <h2>1. Input Your Code</h2>
+                <div class="input-tabs">
+                    <button class="tab-link active" data-tab="paste-code">Paste Code</button>
+                    <button class="tab-link" data-tab="upload-files">Upload Files</button>
                 </div>
-                <div class="generator-input">
-                    <label for="css-file-input">CSS File (Optional)</label>
-                    <input type="file" id="css-file-input" accept=".css">
-                </div>
-                <div class="generator-controls">
-                    <button id="generate-yaml-btn">Generate YAML</button>
-                </div>
-                <div class="generator-output">
-                    <label for="yaml-output">Generated Power Apps YAML</label>
-                    <textarea id="yaml-output" readonly placeholder="Select files and click Generate. The YAML code will appear here."></textarea>
-                    <button id="download-yaml-btn" class="copy-btn" disabled>Download YAML</button>
-                    <button id="copy-yaml-btn" class="copy-btn" disabled>Copy YAML</button>
-                </div>
-            </div>
-        </div>
 
-        <div id="video-guide" class="bento-card">
-            <div class="card-header">
-                <h3>사용 가이드 영상</h3>
-            </div>
-            <div class="card-content">
-                <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allowfullscreen></iframe>
-            </div>
-        </div>
-        
-        <div class="bento-card">
-            <div class="card-header">
-                <h3>Components</h3>
-                <button class="copy-btn" data-code="{'type': 'component'}">Copy Code</button>
-            </div>
-            <div class="card-content">
-                <p>재사용 가능한 모듈형 에셋입니다. (메뉴, 로딩 스피너 등)</p>
-                <img src="https://via.placeholder.com/300x150.png?text=Component+Preview" alt="Component Preview">
-            </div>
-        </div>
-        
-        <div class="bento-card">
-            <div class="card-header">
-                <h3>Page Templates</h3>
-                 <button class="copy-btn" data-code="{'type': 'template'}">Copy Code</button>
-            </div>
-            <div class="card-content">
-                <p>완성형 비즈니스 시나리오 템플릿입니다.</p>
-                 <img src="https://via.placeholder.com/300x150.png?text=Page+Template+Preview" alt="Page Template Preview">
-            </div>
-        </div>
-    </main>
+                <!-- Tab 1: Paste Code -->
+                <div id="paste-code" class="tab-content active">
+                    <div class="code-editor">
+                        <label for="html-input">HTML</label>
+                        <textarea id="html-input" placeholder="Paste your HTML code here..."></textarea>
+                    </div>
+                    <div class="code-editor">
+                        <label for="css-input">CSS</label>
+                        <textarea id="css-input" placeholder="Paste your CSS code here..."></textarea>
+                    </div>
+                </div>
 
+                <!-- Tab 2: Upload Files -->
+                <div id="upload-files" class="tab-content">
+                    <div class="file-upload">
+                        <label for="html-file-input">HTML File</label>
+                        <input type="file" id="html-file-input" accept=".html, .htm">
+                    </div>
+                    <div class="file-upload">
+                        <label for="css-file-input">CSS File</label>
+                        <input type="file" id="css-file-input" accept=".css">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview Section -->
+            <div class="grid-panel">
+                <h2>2. Live Preview</h2>
+                <div class="preview-container">
+                    <iframe id="preview-frame" title="Live Preview"></iframe>
+                </div>
+            </div>
+
+            <!-- Output Section -->
+            <div class="grid-panel full-width">
+                <h2>3. Get Power Apps YAML</h2>
+                <div class="output-controls">
+                    <button id="convert-btn">Convert to YAML</button>
+                    <button id="copy-yaml-btn" disabled>Copy YAML</button>
+                </div>
+                <div class="code-editor">
+                    <textarea id="yaml-output" readonly placeholder="Generated YAML will appear here..."></textarea>
+                </div>
+            </div>
+        </main>
+    </div>
     <script src="main.js"></script>
 </body>
 </html>

@@ -1,151 +1,221 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Theme Toggle --- //
-    const themeToggle = document.getElementById('theme-toggle');
-    const body = document.body;
+    const htmlInput = document.getElementById('html-input');
+    const cssInput = document.getElementById('css-input');
+    const htmlFileInput = document.getElementById('html-file-input');
+    const cssFileInput = document.getElementById('css-file-input');
+    const previewFrame = document.getElementById('preview-frame');
+    const convertBtn = document.getElementById('convert-btn');
+    const yamlOutput = document.getElementById('yaml-output');
+    const copyYamlBtn = document.getElementById('copy-yaml-btn');
 
-    themeToggle.addEventListener('click', () => {
-        body.classList.toggle('light-mode');
-        body.classList.toggle('dark-mode');
-        const isLightMode = body.classList.contains('light-mode');
-        themeToggle.textContent = isLightMode ? 'Dark Mode' : 'Light Mode';
-    });
+    let currentHtml = '';
+    let currentCss = '';
 
-    // --- Legacy Code Copy Buttons --- //
-    document.querySelectorAll('.copy-btn[data-code]').forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.stopPropagation();
-            copyToClipboard(button, button.dataset.code);
+    // --- Tab Functionality ---
+    const tabs = document.querySelectorAll('.tab-link');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const target = document.getElementById(tab.dataset.tab);
+            
+            // Deactivate all tabs and content
+            document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            // Activate clicked tab and its content
+            tab.classList.add('active');
+            target.classList.add('active');
+            updatePreview(); // Refresh preview when switching tabs
         });
     });
 
-    // --- YAML Generator --- //
-    const htmlFileInput = document.getElementById('html-file-input');
-    const cssFileInput = document.getElementById('css-file-input');
-    const generateBtn = document.getElementById('generate-yaml-btn');
-    const yamlOutput = document.getElementById('yaml-output');
-    const downloadBtn = document.getElementById('download-yaml-btn');
-    const copyYamlBtn = document.getElementById('copy-yaml-btn');
+    // --- Live Preview Update ---
+    const updatePreview = () => {
+        const source = `
+            <html>
+                <head>
+                    <style>${currentCss}</style>
+                </head>
+                <body>${currentHtml}</body>
+            </html>
+        `;
+        previewFrame.srcdoc = source;
+    };
 
-    generateBtn.addEventListener('click', async () => {
-        const htmlFile = htmlFileInput.files[0];
-        const cssFile = cssFileInput.files[0];
+    // --- Event Listeners for Input ---
+    htmlInput.addEventListener('input', () => { 
+        currentHtml = htmlInput.value; 
+        updatePreview(); 
+    });
+    cssInput.addEventListener('input', () => { 
+        currentCss = cssInput.value; 
+        updatePreview(); 
+    });
 
-        if (!htmlFile) {
-            alert('HTML 파일을 선택하세요.');
+    htmlFileInput.addEventListener('change', async (e) => {
+        if (e.target.files[0]) {
+            currentHtml = await e.target.files[0].text();
+            updatePreview();
+        }
+    });
+
+    cssFileInput.addEventListener('change', async (e) => {
+        if (e.target.files[0]) {
+            currentCss = await e.target.files[0].text();
+            updatePreview();
+        }
+    });
+
+    // --- Conversion Logic ---
+    convertBtn.addEventListener('click', () => {
+        if (!currentHtml) {
+            alert("Please provide some HTML content first.");
             return;
         }
 
         try {
-            let htmlContent = await readFileAsText(htmlFile);
-            if (cssFile) {
-                const cssContent = await readFileAsText(cssFile);
-                // Inject CSS into a style tag in the HTML head
-                const styleTag = `<style>${cssContent}</style>`;
-                htmlContent = htmlContent.replace("</head>", `${styleTag}</head>`);
-            }
-
-            const yamlCode = convertToYaml(htmlContent);
-            yamlOutput.value = yamlCode;
-            downloadBtn.disabled = false;
+            const yaml = generateYamlFromHtml(currentHtml, currentCss);
+            yamlOutput.value = yaml;
             copyYamlBtn.disabled = false;
-
         } catch (error) {
-            console.error("YAML Generation Error:", error);
-            alert(`YAML 생성에 실패했습니다: ${error.message}`);
-            yamlOutput.value = `오류: ${error.message}`;
-            downloadBtn.disabled = true;
+            console.error("Error generating YAML:", error);
+            yamlOutput.value = `Error: ${error.message}`;
             copyYamlBtn.disabled = true;
         }
     });
 
-    downloadBtn.addEventListener('click', () => {
-        if (!yamlOutput.value) return;
-        const blob = new Blob([yamlOutput.value], { type: 'text/yaml' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'powerapps-component.yaml';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    });
-    
+    // --- Copy Button ---
     copyYamlBtn.addEventListener('click', () => {
-        if (!yamlOutput.value) return;
-        copyToClipboard(copyYamlBtn, yamlOutput.value);
+        navigator.clipboard.writeText(yamlOutput.value).then(() => {
+            const originalText = copyYamlBtn.textContent;
+            copyYamlBtn.textContent = 'Copied!';
+            setTimeout(() => { copyYamlBtn.textContent = originalText; }, 2000);
+        }).catch(err => {
+            console.error('Failed to copy YAML: ', err);
+        });
     });
 });
 
-function readFileAsText(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsText(file);
+function generateYamlFromHtml(html, css) {
+    const tempContainer = document.createElement('div');
+    tempContainer.innerHTML = html;
+
+    const styleSheet = new CSSStyleSheet();
+    styleSheet.replaceSync(css);
+
+    let yamlString = 'ComponentDefinitions:\n'; // Starting point
+
+    // Process each top-level element in the provided HTML
+    Array.from(tempContainer.children).forEach(element => {
+        yamlString += processElement(element, styleSheet, 2); // Start with indentation level 2
     });
+
+    return yamlString;
 }
 
-function copyToClipboard(button, text) {
-    navigator.clipboard.writeText(text).then(() => {
-        const originalText = button.textContent;
-        button.textContent = 'Copied!';
-        button.classList.add('success');
-        setTimeout(() => {
-            button.textContent = originalText;
-            button.classList.remove('success');
-        }, 2000);
-    }).catch(err => {
-        console.error('Failed to copy: ', err);
-        alert("복사에 실패했습니다.");
-    });
-}
+function processElement(element, styleSheet, indentLevel) {
+    let controlName = getControlName(element);
+    let controlType = getControlType(element);
+    let indent = ' '.repeat(indentLevel);
+    let yaml = `${indent}- ${controlName}:\n`;
+    indent += '  ';
 
-function convertToYaml(htmlString) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlString, "text/html");
-    
-    // Find the first element in the body, or a specific target element
-    const element = doc.body.firstElementChild;
+    yaml += `${indent}Control: ${controlType}\n`;
+    yaml += `${indent}Properties:\n`;
+    indent += '  ';
 
-    if (!element || !(element instanceof HTMLElement)) {
-        throw new Error("변환할 유효한 HTML 요소를 찾을 수 없습니다. <body> 태그 안에 요소가 있는지 확인하세요.");
+    // --- Apply Styles ---
+    let styles = {};
+    try {
+         // Get matching CSS rules
+        for (const rule of styleSheet.cssRules) {
+            if (element.matches(rule.selectorText)) {
+                for (const style of rule.style) {
+                     styles[style] = rule.style[style];
+                }
+            }
+        }
+    } catch(e) {
+        console.warn("Could not process stylesheet:", e);
     }
 
-    // Get computed styles
-    const computedStyle = window.getComputedStyle(element);
+    // Basic properties mapping
+    if (element.textContent.trim()) {
+        yaml += `${indent}Text: |=\n${indent}  ="${element.textContent.trim()}"\n`;
+    }
+    if (styles['background-color']) {
+        yaml += `${indent}Fill: =RGBA(${cssColorToRgba(styles['background-color'])})\n`;
+    }
+    if (styles['color']) {
+        yaml += `${indent}Color: =RGBA(${cssColorToRgba(styles['color'])})\n`;
+    }
+    // Add more property mappings here based on styles and element attributes
+    // e.g., Width, Height, Padding, Border, etc.
+    if (styles['width']) yaml += `${indent}Width: =${parseInt(styles['width'])}\n`;
+    if (styles['height']) yaml += `${indent}Height: =${parseInt(styles['height'])}\n`;
 
-    const componentName = "GeneratedComponent";
-    let yaml = `${componentName}:\n`;
-    
-    yaml += `    Text: |=\n        ="${element.textContent.trim()}"\n`;
-
-    const properties = {
-        Fill: `ColorValue("${computedStyle.backgroundColor || 'transparent'}")`,
-        Color: `ColorValue("${computedStyle.color || 'black'}")`,
-        Width: parseInt(computedStyle.width) || 180,
-        Height: parseInt(computedStyle.height) || 60,
-        PaddingTop: parseInt(computedStyle.paddingTop) || 0,
-        PaddingRight: parseInt(computedStyle.paddingRight) || 0,
-        PaddingBottom: parseInt(computedStyle.paddingBottom) || 0,
-        PaddingLeft: parseInt(computedStyle.paddingLeft) || 0,
-        BorderThickness: parseInt(computedStyle.borderWidth) || 0,
-        BorderStyle: `BorderStyle.${computedStyle.borderStyle}`,
-        BorderColor: `ColorValue("${computedStyle.borderColor || 'transparent'}")`,
-        RadiusTopLeft: parseInt(computedStyle.borderTopLeftRadius) || 0,
-        RadiusTopRight: parseInt(computedStyle.borderTopRightRadius) || 0,
-        RadiusBottomLeft: parseInt(computedStyle.borderBottomLeftRadius) || 0,
-        RadiusBottomRight: parseInt(computedStyle.borderBottomRightRadius) || 0,
-        FontWeight: `FontWeight.${computedStyle.fontWeight > 600 ? 'Bold' : (computedStyle.fontWeight < 500 ? 'Normal' : 'Semibold')}`,
-        FontSize: parseInt(computedStyle.fontSize) || 15,
-    };
-
-    for (const [key, value] of Object.entries(properties)) {
-        // Add property if it has a meaningful value
-        if (value && value !== 0 && value !== `ColorValue("transparent")` && value !== `ColorValue("rgba(0, 0, 0, 0)")`) {
-             yaml += `    ${key}: =${value}\n`;
-        }
+    // --- Children ---
+    if (element.children.length > 0) {
+        yaml += `${indent.substring(0, indent.length - 2)}Children:\n`;
+        Array.from(element.children).forEach(child => {
+            yaml += processElement(child, styleSheet, indentLevel + 4);
+        });
     }
 
     return yaml;
+}
+
+function getControlName(element) {
+    // Generate a name from ID, class, or tag
+    if (element.id) {
+        return element.id.charAt(0).toUpperCase() + element.id.slice(1); // Capitalize
+    }
+    if (element.className) {
+        // Basic conversion from CSS class to a PascalCase name
+        return element.className.split(' ')[0].replace(/-(\w)/g, (m, w) => w.toUpperCase());
+    }
+    return `${element.tagName.charAt(0)}${element.tagName.slice(1).toLowerCase()}Control`;
+}
+
+function getControlType(element) {
+    // A more sophisticated mapping could be implemented here
+    switch (element.tagName.toLowerCase()) {
+        case 'div':
+        case 'section':
+        case 'header':
+        case 'footer':
+        case 'main':
+            return 'GroupContainer@1.4.0';
+        case 'button':
+            return 'Button@0.0.45';
+        case 'p':
+        case 'span':
+        case 'h1':
+        case 'h2':
+        case 'h3':
+            return 'Label@2.5.1';
+        case 'img':
+            return 'Image@2.2.3';
+        case 'input':
+             return 'TextInput@0.0.54';
+        default:
+            return 'Label@2.5.1'; // Default fallback
+    }
+}
+
+// Helper to convert CSS color to RGBA for Power Apps
+function cssColorToRgba(colorStr) {
+  const ctx = document.createElement('canvas').getContext('2d');
+  if (!ctx) return '0, 0, 0, 1'; 
+  ctx.fillStyle = colorStr;
+  const color = ctx.fillStyle; // This will be in #rrggbb or rgba() format
+  if (color.startsWith('#')) {
+      const r = parseInt(color.slice(1, 3), 16);
+      const g = parseInt(color.slice(3, 5), 16);
+      const b = parseInt(color.slice(5, 7), 16);
+      return `${r}, ${g}, ${b}, 1`;
+  } 
+  if (color.startsWith('rgb')) { // handles rgb() and rgba()
+      return color.match(/\d+/g).join(', ');
+  }
+  return '0, 0, 0, 1'; // fallback
 }
