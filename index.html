@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Power Apps Code Snippet Platform</title>
+    <title>Power Apps YAML Code Generator</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="dark-mode">
@@ -12,8 +12,8 @@
             <a href="#" class="logo">Power-Up</a>
             <ul>
                 <li><a href="#">홈</a></li>
-                <li><a href="#">코드 가이드(Video)</a></li>
-                <li><a href="#">메일 발송</a></li>
+                <li><a href="#generator">YAML 생성기</a></li>
+                <li><a href="#video-guide">코드 가이드</a></li>
                 <li><a href="#">문의 게시판</a></li>
             </ul>
             <button id="theme-toggle">Light Mode</button>
@@ -21,7 +21,34 @@
     </header>
 
     <main class="bento-container">
-        <div class="bento-card card-large">
+        <div id="generator" class="bento-card card-large">
+            <div class="card-header">
+                <h3>HTML/CSS to Power Apps YAML Generator</h3>
+            </div>
+            <div class="card-content generator-grid">
+                <div class="generator-input">
+                    <label for="html-input">HTML Code</label>
+                    <textarea id="html-input" placeholder="<div style='''background-color: #0078d4; color: white;'''>
+  My Power Apps Button
+</div>"></textarea>
+                </div>
+                <div class="generator-input">
+                    <label for="css-input">CSS Code (Optional)</label>
+                    <textarea id="css-input" placeholder="/* 추가적인 CSS를 여기에 입력하세요 (미구현) */" disabled></textarea>
+                </div>
+                <div class="generator-controls">
+                    <button id="generate-yaml-btn">Generate YAML</button>
+                </div>
+                <div class="generator-output">
+                    <label for="yaml-output">Generated Power Apps YAML</label>
+                    <textarea id="yaml-output" readonly placeholder="Power Apps에 붙여넣을 YAML 코드가 여기에 생성됩니다."></textarea>
+                    <button id="download-yaml-btn" class="copy-btn" disabled>Download YAML</button>
+                    <button id="copy-yaml-btn" class="copy-btn" disabled>Copy YAML</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="video-guide" class="bento-card">
             <div class="card-header">
                 <h3>사용 가이드 영상</h3>
             </div>
@@ -29,16 +56,7 @@
                 <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allowfullscreen></iframe>
             </div>
         </div>
-        <div class="bento-card">
-            <div class="card-header">
-                <h3>Simple Functions</h3>
-                <button class="copy-btn" data-code="{'type': 'simple'}">Copy Code</button>
-            </div>
-            <div class="card-content">
-                <p>버튼 디자인, 페이지네이션 등 가벼운 UI/UX 요소들입니다.</p>
-                <img src="https://via.placeholder.com/300x150.png?text=Simple+Function+Preview" alt="Simple Function Preview">
-            </div>
-        </div>
+        
         <div class="bento-card">
             <div class="card-header">
                 <h3>Components</h3>
@@ -49,13 +67,14 @@
                 <img src="https://via.placeholder.com/300x150.png?text=Component+Preview" alt="Component Preview">
             </div>
         </div>
+        
         <div class="bento-card">
             <div class="card-header">
                 <h3>Page Templates</h3>
                  <button class="copy-btn" data-code="{'type': 'template'}">Copy Code</button>
             </div>
             <div class="card-content">
-                <p>완성형 비즈니스 시나리오 템플릿입니다. (SharePoint 연동 게시판 등)</p>
+                <p>완성형 비즈니스 시나리오 템플릿입니다.</p>
                  <img src="https://via.placeholder.com/300x150.png?text=Page+Template+Preview" alt="Page Template Preview">
             </div>
         </div>
