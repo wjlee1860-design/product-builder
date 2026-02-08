@@ -1,87 +1,107 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Element references
     const htmlInput = document.getElementById('html-input');
     const cssInput = document.getElementById('css-input');
     const htmlFileInput = document.getElementById('html-file-input');
     const cssFileInput = document.getElementById('css-file-input');
     const previewFrame = document.getElementById('preview-frame');
     const convertBtn = document.getElementById('convert-btn');
+    const checkBtn = document.getElementById('check-btn');
     const yamlOutput = document.getElementById('yaml-output');
     const copyYamlBtn = document.getElementById('copy-yaml-btn');
+    const statusMessage = document.getElementById('status-message');
 
     let currentHtml = '';
     let currentCss = '';
 
     // --- Tab Functionality ---
-    const tabs = document.querySelectorAll('.tab-link');
-    tabs.forEach(tab => {
+    document.querySelectorAll('.tab-link').forEach(tab => {
         tab.addEventListener('click', () => {
-            const target = document.getElementById(tab.dataset.tab);
-            
             document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-
             tab.classList.add('active');
-            target.classList.add('active');
+            document.getElementById(tab.dataset.tab).classList.add('active');
             updatePreview();
         });
     });
 
     // --- Live Preview Update ---
     const updatePreview = () => {
-        const source = `<html><head><style>${currentCss}</style></head><body>${currentHtml}</body></html>`;
-        previewFrame.srcdoc = source;
+        previewFrame.srcdoc = `<html><head><style>${currentCss}</style></head><body>${currentHtml}</body></html>`;
     };
 
-    // --- Event Listeners for Input ---
+    // --- Input Event Listeners ---
     htmlInput.addEventListener('input', () => { currentHtml = htmlInput.value; updatePreview(); });
     cssInput.addEventListener('input', () => { currentCss = cssInput.value; updatePreview(); });
+    htmlFileInput.addEventListener('change', async e => { if(e.target.files[0]) { currentHtml = await e.target.files[0].text(); updatePreview(); } });
+    cssFileInput.addEventListener('change', async e => { if(e.target.files[0]) { currentCss = await e.target.files[0].text(); updatePreview(); } });
 
-    htmlFileInput.addEventListener('change', async (e) => {
-        if (e.target.files[0]) { currentHtml = await e.target.files[0].text(); updatePreview(); }
-    });
-
-    cssFileInput.addEventListener('change', async (e) => {
-        if (e.target.files[0]) { currentCss = await e.target.files[0].text(); updatePreview(); }
-    });
-
-    // --- Conversion Logic ---
-    convertBtn.addEventListener('click', () => {
+    // --- Core Logic Functions ---
+    const performConversion = (isCheckOnly = false) => {
         if (!currentHtml) {
             alert("Please provide some HTML content first.");
             return;
         }
 
+        clearStatus();
+
         try {
             const yaml = generateYamlFromHtml(currentHtml, currentCss);
             
-            // **YAML Validation Step**
+            // YAML Validation
             try {
-                jsyaml.load(yaml); // Attempt to parse the generated YAML
-                yamlOutput.value = yaml;
-                yamlOutput.style.borderColor = ''; // Reset border color
-                copyYamlBtn.disabled = false;
+                jsyaml.load(yaml); // Validate syntax
+                if (isCheckOnly) {
+                    showStatus('Code is valid!', 'success');
+                } else {
+                    yamlOutput.value = yaml;
+                    yamlOutput.style.borderColor = '';
+                    copyYamlBtn.disabled = false;
+                    showStatus('Conversion successful!', 'success');
+                }
             } catch (validationError) {
-                console.error("Generated YAML is invalid:", validationError);
-                yamlOutput.style.borderColor = 'red';
-                yamlOutput.value = `--- YAML SYNTAX ERROR ---\n${validationError.message}\n\n--- GENERATED CODE (for debugging) ---\n${yaml}`;
+                const errorMessage = `YAML Syntax Error: ${validationError.message}`;
+                if (isCheckOnly) {
+                    showStatus(errorMessage, 'error');
+                } else {
+                    yamlOutput.style.borderColor = 'red';
+                    yamlOutput.value = `--- YAML SYNTAX ERROR ---\n${validationError.message}\n\n--- GENERATED CODE (for debugging) ---\n${yaml}`;
+                }
                 copyYamlBtn.disabled = true;
             }
-
-        } catch (error) {
-            console.error("Error generating YAML:", error);
-            yamlOutput.value = `Error: ${error.message}`;
+        } catch (generationError) {
+            const errorMessage = `Generation Error: ${generationError.message}`;
+            showStatus(errorMessage, 'error');
+            yamlOutput.value = errorMessage;
             copyYamlBtn.disabled = true;
         }
-    });
+    };
 
-    // --- Copy Button ---
+    // --- Button Event Listeners ---
+    convertBtn.addEventListener('click', () => performConversion(false));
+    checkBtn.addEventListener('click', () => performConversion(true));
+
     copyYamlBtn.addEventListener('click', () => {
         navigator.clipboard.writeText(yamlOutput.value).then(() => {
             copyYamlBtn.textContent = 'Copied!';
             setTimeout(() => { copyYamlBtn.textContent = 'Copy YAML'; }, 2000);
         }).catch(err => console.error('Failed to copy YAML: ', err));
     });
+
+    // --- Status Message Helpers ---
+    const showStatus = (message, type) => {
+        statusMessage.textContent = message;
+        statusMessage.className = type; // 'success' or 'error'
+        setTimeout(clearStatus, 4000); // Message disappears after 4 seconds
+    };
+
+    const clearStatus = () => {
+        statusMessage.textContent = '';
+        statusMessage.className = '';
+    };
 });
+
+// --- YAML Generation Functions (largely unchanged) ---
 
 function generateYamlFromHtml(html, css) {
     const tempContainer = document.createElement('div');
@@ -90,7 +110,7 @@ function generateYamlFromHtml(html, css) {
     const styleSheet = new CSSStyleSheet();
     styleSheet.replaceSync(css);
 
-    let mainComponentName = "MyPowerAppComponent"; // Define a main component name
+    let mainComponentName = "MyPowerAppComponent"; 
     let yamlObject = {
         ComponentDefinitions: {
             [mainComponentName]: {
@@ -104,9 +124,6 @@ function generateYamlFromHtml(html, css) {
     const children = Array.from(tempContainer.children).map(element => processElement(element, styleSheet));
     yamlObject.ComponentDefinitions[mainComponentName].Children = children;
 
-    // Convert the JavaScript object to a YAML string
-    // The js-yaml library can do this, but for this specific format, manual generation is more direct.
-    // Note: A full object-to-YAML library would be safer for complex cases.
     return objectToYaml(yamlObject, 0);
 }
 
@@ -117,7 +134,6 @@ function processElement(element, styleSheet) {
     const properties = {};
     const children = [];
 
-    // Apply Styles
     const styles = getAppliedStyles(element, styleSheet);
 
     if (element.textContent && !element.children.length) {
@@ -128,7 +144,6 @@ function processElement(element, styleSheet) {
     if (styles['width']) properties.Width = `=${parseInt(styles['width']) || 0}`;
     if (styles['height']) properties.Height = `=${parseInt(styles['height']) || 0}`;
 
-    // Recursively process children
     if (element.children.length > 0) {
         Array.from(element.children).forEach(child => {
             children.push(processElement(child, styleSheet));
@@ -195,7 +210,6 @@ function cssColorToRgba(colorStr) {
   return '0, 0, 0, 1';
 }
 
-// Custom function to convert a JS object to the specific YAML format required.
 function objectToYaml(obj, indentLevel) {
     let yamlString = '';
     const indent = ' '.repeat(indentLevel);
@@ -206,7 +220,6 @@ function objectToYaml(obj, indentLevel) {
             if (Array.isArray(value)) {
                 yamlString += `${indent}${key}:\n`;
                 value.forEach(item => {
-                    // In our structure, arrays contain objects, so we need to handle the dash `-`
                     const childIndent = ' '.repeat(indentLevel + 2);
                     const childKey = Object.keys(item)[0];
                     yamlString += `${childIndent}- ${childKey}:\n`;
