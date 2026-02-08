@@ -56,7 +56,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
         } catch (error) {
             // If any error occurs (generation or validation), display it
-            const errorMessage = `--- ERROR ---\nAn error occurred during YAML generation or validation:\n\n${error.message}`;
+            const errorMessage = `--- ERROR ---
+An error occurred during YAML generation or validation:\n\n${error.message}`;
             yamlOutput.value = errorMessage;
             yamlOutput.style.borderColor = 'red';
             copyYamlBtn.disabled = true;
@@ -192,7 +193,7 @@ function cssColorToRgba(colorStr) {
   return '0, 0, 0, 1';
 }
 
-// Improved objectToYaml function to ensure valid Power Apps YAML
+// Final, corrected function to convert a JS object to the specific YAML format required.
 function objectToYaml(obj, indentLevel) {
     let yamlString = '';
     const indent = ' '.repeat(indentLevel);
@@ -201,9 +202,12 @@ function objectToYaml(obj, indentLevel) {
         if (Object.prototype.hasOwnProperty.call(obj, key)) {
             const value = obj[key];
 
-            if (value === null || value === undefined) continue;
+            if (value === null || value === undefined) {
+                continue; // Skip null or undefined values
+            }
 
             if (Array.isArray(value)) {
+                // Only render the key and content if the array is not empty
                 if (value.length > 0) {
                     yamlString += `${indent}${key}:\n`;
                     value.forEach(item => {
@@ -214,10 +218,13 @@ function objectToYaml(obj, indentLevel) {
                     });
                 }
             } else if (typeof value === 'object') {
-                // Always render Properties, even if empty, as processElement now adds defaults
-                yamlString += `${indent}${key}:\n`;
-                yamlString += objectToYaml(value, indentLevel + 2);
+                // Only render the key and content if the object is not empty
+                if (Object.keys(value).length > 0) {
+                    yamlString += `${indent}${key}:\n`;
+                    yamlString += objectToYaml(value, indentLevel + 2);
+                }
             } else {
+                // Render simple key-value pairs
                 yamlString += `${indent}${key}: ${value}\n`;
             }
         }
