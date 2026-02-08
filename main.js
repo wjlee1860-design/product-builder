@@ -210,6 +210,7 @@ function cssColorToRgba(colorStr) {
   return '0, 0, 0, 1';
 }
 
+// Custom function to convert a JS object to the specific YAML format required.
 function objectToYaml(obj, indentLevel) {
     let yamlString = '';
     const indent = ' '.repeat(indentLevel);
@@ -217,17 +218,29 @@ function objectToYaml(obj, indentLevel) {
     for (const key in obj) {
         if (Object.prototype.hasOwnProperty.call(obj, key)) {
             const value = obj[key];
+
+            // Skip null or undefined values to prevent invalid YAML properties
+            if (value === null || value === undefined) {
+                continue;
+            }
+
             if (Array.isArray(value)) {
-                yamlString += `${indent}${key}:\n`;
-                value.forEach(item => {
-                    const childIndent = ' '.repeat(indentLevel + 2);
-                    const childKey = Object.keys(item)[0];
-                    yamlString += `${childIndent}- ${childKey}:\n`;
-                    yamlString += objectToYaml(item[childKey], indentLevel + 4);
-                });
-            } else if (typeof value === 'object' && value !== null) {
-                yamlString += `${indent}${key}:\n`;
-                yamlString += objectToYaml(value, indentLevel + 2);
+                // Only render the key for non-empty arrays (like Children)
+                if (value.length > 0) {
+                    yamlString += `${indent}${key}:\n`;
+                    value.forEach(item => {
+                        const childIndent = ' '.repeat(indentLevel + 2);
+                        const childKey = Object.keys(item)[0];
+                        yamlString += `${childIndent}- ${childKey}:\n`;
+                        yamlString += objectToYaml(item[childKey], indentLevel + 4);
+                    });
+                }
+            } else if (typeof value === 'object') {
+                // Only render the key for non-empty objects (like Properties)
+                if (Object.keys(value).length > 0) {
+                    yamlString += `${indent}${key}:\n`;
+                    yamlString += objectToYaml(value, indentLevel + 2);
+                }
             } else {
                 yamlString += `${indent}${key}: ${value}\n`;
             }
