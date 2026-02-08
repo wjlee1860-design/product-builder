@@ -6,10 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const cssFileInput = document.getElementById('css-file-input');
     const previewFrame = document.getElementById('preview-frame');
     const convertBtn = document.getElementById('convert-btn');
-    const checkBtn = document.getElementById('check-btn');
     const yamlOutput = document.getElementById('yaml-output');
     const copyYamlBtn = document.getElementById('copy-yaml-btn');
-    const statusMessage = document.getElementById('status-message');
 
     let currentHtml = '';
     let currentCss = '';
@@ -36,50 +34,38 @@ document.addEventListener('DOMContentLoaded', () => {
     htmlFileInput.addEventListener('change', async e => { if(e.target.files[0]) { currentHtml = await e.target.files[0].text(); updatePreview(); } });
     cssFileInput.addEventListener('change', async e => { if(e.target.files[0]) { currentCss = await e.target.files[0].text(); updatePreview(); } });
 
-    // --- Core Logic Functions ---
-    const performConversion = (isCheckOnly = false) => {
+    // --- Core Conversion Logic ---
+    const convertAndValidate = () => {
         if (!currentHtml) {
             alert("Please provide some HTML content first.");
             return;
         }
 
-        clearStatus();
+        yamlOutput.style.borderColor = ''; // Reset border color
 
         try {
+            // 1. Generate the base YAML from HTML and CSS
             const yaml = generateYamlFromHtml(currentHtml, currentCss);
+
+            // 2. Validate the generated YAML using js-yaml
+            jsyaml.load(yaml);
             
-            // YAML Validation
-            try {
-                jsyaml.load(yaml); // Validate syntax
-                if (isCheckOnly) {
-                    showStatus('Code is valid!', 'success');
-                } else {
-                    yamlOutput.value = yaml;
-                    yamlOutput.style.borderColor = '';
-                    copyYamlBtn.disabled = false;
-                    showStatus('Conversion successful!', 'success');
-                }
-            } catch (validationError) {
-                const errorMessage = `YAML Syntax Error: ${validationError.message}`;
-                if (isCheckOnly) {
-                    showStatus(errorMessage, 'error');
-                } else {
-                    yamlOutput.style.borderColor = 'red';
-                    yamlOutput.value = `--- YAML SYNTAX ERROR ---\n${validationError.message}\n\n--- GENERATED CODE (for debugging) ---\n${yaml}`;
-                }
-                copyYamlBtn.disabled = true;
-            }
-        } catch (generationError) {
-            const errorMessage = `Generation Error: ${generationError.message}`;
-            showStatus(errorMessage, 'error');
+            // 3. If validation passes, display the YAML
+            yamlOutput.value = yaml;
+            copyYamlBtn.disabled = false;
+            
+        } catch (error) {
+            // If any error occurs (generation or validation), display it
+            const errorMessage = `--- ERROR ---\nAn error occurred during YAML generation or validation:\n\n${error.message}`;
             yamlOutput.value = errorMessage;
+            yamlOutput.style.borderColor = 'red';
             copyYamlBtn.disabled = true;
+            console.error(error);
         }
     };
 
     // --- Button Event Listeners ---
-    convertBtn.addEventListener('click', () => performConversion(false));
-    checkBtn.addEventListener('click', () => performConversion(true));
+    convertBtn.addEventListener('click', convertAndValidate);
 
     copyYamlBtn.addEventListener('click', () => {
         navigator.clipboard.writeText(yamlOutput.value).then(() => {
@@ -87,21 +73,9 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => { copyYamlBtn.textContent = 'Copy YAML'; }, 2000);
         }).catch(err => console.error('Failed to copy YAML: ', err));
     });
-
-    // --- Status Message Helpers ---
-    const showStatus = (message, type) => {
-        statusMessage.textContent = message;
-        statusMessage.className = type; // 'success' or 'error'
-        setTimeout(clearStatus, 4000); // Message disappears after 4 seconds
-    };
-
-    const clearStatus = () => {
-        statusMessage.textContent = '';
-        statusMessage.className = '';
-    };
 });
 
-// --- YAML Generation Functions (largely unchanged) ---
+// --- YAML Generation Functions ---
 
 function generateYamlFromHtml(html, css) {
     const tempContainer = document.createElement('div');
@@ -124,6 +98,7 @@ function generateYamlFromHtml(html, css) {
     const children = Array.from(tempContainer.children).map(element => processElement(element, styleSheet));
     yamlObject.ComponentDefinitions[mainComponentName].Children = children;
 
+    // Use the improved objectToYaml function
     return objectToYaml(yamlObject, 0);
 }
 
@@ -131,18 +106,25 @@ function processElement(element, styleSheet) {
     const controlName = getControlName(element);
     const controlType = getControlType(element);
 
-    const properties = {};
+    // --- Start with default properties for Power Apps compatibility ---
+    const properties = {
+        X: '=0',
+        Y: '=0',
+        Width: '=640', // Default canvas width
+        Height: '=40',  // Default height for a single-line control
+    };
     const children = [];
 
     const styles = getAppliedStyles(element, styleSheet);
 
+    // --- Apply styles and content, overriding defaults ---
     if (element.textContent && !element.children.length) {
         properties.Text = `="${element.textContent.trim().replace(/\n/g, ' ')}"`;
     }
     if (styles['background-color']) properties.Fill = `=RGBA(${cssColorToRgba(styles['background-color'])})`;
     if (styles['color']) properties.Color = `=RGBA(${cssColorToRgba(styles['color'])})`;
-    if (styles['width']) properties.Width = `=${parseInt(styles['width']) || 0}`;
-    if (styles['height']) properties.Height = `=${parseInt(styles['height']) || 0}`;
+    if (styles['width']) properties.Width = `=${parseInt(styles['width']) || 640}`;
+    if (styles['height']) properties.Height = `=${parseInt(styles['height']) || 40}`;
 
     if (element.children.length > 0) {
         Array.from(element.children).forEach(child => {
@@ -210,7 +192,7 @@ function cssColorToRgba(colorStr) {
   return '0, 0, 0, 1';
 }
 
-// Custom function to convert a JS object to the specific YAML format required.
+// Improved objectToYaml function to ensure valid Power Apps YAML
 function objectToYaml(obj, indentLevel) {
     let yamlString = '';
     const indent = ' '.repeat(indentLevel);
@@ -219,13 +201,9 @@ function objectToYaml(obj, indentLevel) {
         if (Object.prototype.hasOwnProperty.call(obj, key)) {
             const value = obj[key];
 
-            // Skip null or undefined values to prevent invalid YAML properties
-            if (value === null || value === undefined) {
-                continue;
-            }
+            if (value === null || value === undefined) continue;
 
             if (Array.isArray(value)) {
-                // Only render the key for non-empty arrays (like Children)
                 if (value.length > 0) {
                     yamlString += `${indent}${key}:\n`;
                     value.forEach(item => {
@@ -236,11 +214,9 @@ function objectToYaml(obj, indentLevel) {
                     });
                 }
             } else if (typeof value === 'object') {
-                // Only render the key for non-empty objects (like Properties)
-                if (Object.keys(value).length > 0) {
-                    yamlString += `${indent}${key}:\n`;
-                    yamlString += objectToYaml(value, indentLevel + 2);
-                }
+                // Always render Properties, even if empty, as processElement now adds defaults
+                yamlString += `${indent}${key}:\n`;
+                yamlString += objectToYaml(value, indentLevel + 2);
             } else {
                 yamlString += `${indent}${key}: ${value}\n`;
             }
