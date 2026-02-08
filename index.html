@@ -3,101 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>소프트웨어 - 당신의 멋진 소프트웨어를 판매하세요</title>
-    <link rel="stylesheet" href="style.css?v=1.1">
+    <title>Power Apps Code Snippet Platform</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="dark-mode">
     <header>
-        <nav>
-            <div class="logo">
-                <a href="#">소프트웨어</a>
-            </div>
+        <nav class="gnb">
+            <a href="#" class="logo">Power-Up</a>
             <ul>
-                <li><a href="#features">기능</a></li>
-                <li><a href="#pricing">가격</a></li>
-                <li><a href="#contact">문의</a></li>
+                <li><a href="#">홈</a></li>
+                <li><a href="#">코드 가이드(Video)</a></li>
+                <li><a href="#">메일 발송</a></li>
+                <li><a href="#">문의 게시판</a></li>
             </ul>
+            <button id="theme-toggle">Light Mode</button>
         </nav>
     </header>
 
-    <main>
-        <section class="hero">
-            <div class="hero-content">
-                <h1>비즈니스 성장을 위한 최고의 소프트웨어</h1>
-                <p>우리는 당신의 성공을 돕는 최고의 소프트웨어를 제공합니다. 지금 바로 사용해보세요!</p>
-                <a href="#" class="cta-button">무료로 시작하기</a>
+    <main class="bento-container">
+        <div class="bento-card card-large">
+            <div class="card-header">
+                <h3>사용 가이드 영상</h3>
             </div>
-        </section>
-
-        <section id="features" class="features">
-            <h2>주요 기능</h2>
-            <div class="feature-grid">
-                <div class="feature">
-                    <i class="fas fa-rocket"></i>
-                    <h3>기능 1</h3>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                </div>
-                <div class="feature">
-                    <i class="fas fa-cogs"></i>
-                    <h3>기능 2</h3>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                </div>
-                <div class="feature">
-                    <i class="fas fa-users"></i>
-                    <h3>기능 3</h3>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                </div>
+            <div class="card-content">
+                <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allowfullscreen></iframe>
             </div>
-        </section>
-
-        <section id="pricing" class="pricing">
-            <h2>가격 정책</h2>
-            <div class="pricing-grid">
-                <div class="pricing-plan">
-                    <h3>베이직</h3>
-                    <p class="price">₩10,000<span>/월</span></p>
-                    <ul>
-                        <li>기능 A</li>
-                        <li>기능 B</li>
-                        <li>기능 C</li>
-                    </ul>
-                    <a href="#" class="cta-button">플랜 선택</a>
-                </div>
-                <div class="pricing-plan recommended">
-                    <h3>프로</h3>
-                    <p class="price">₩25,000<span>/월</span></p>
-                    <ul>
-                        <li>베이직의 모든 기능</li>
-                        <li>기능 D</li>
-                        <li>기능 E</li>
-                    </ul>
-                    <a href="#" class="cta-button">플랜 선택</a>
-                </div>
-                <div class="pricing-plan">
-                    <h3>엔터프라이즈</h3>
-                    <p class="price">₩50,000<span>/월</span></p>
-                    <ul>
-                        <li>프로의 모든 기능</li>
-                        <li>24/7 고객 지원</li>
-                        <li>전담 계정 관리자</li>
-                    </ul>
-                    <a href="#" class="cta-button">플랜 선택</a>
-                </div>
+        </div>
+        <div class="bento-card">
+            <div class="card-header">
+                <h3>Simple Functions</h3>
+                <button class="copy-btn" data-code="{'type': 'simple'}">Copy Code</button>
             </div>
-        </section>
-
-        <section id="contact" class="contact">
-            <h2>문의하기</h2>
-            <p>질문이 있으신가요? 언제든지 연락주세요.</p>
-            <a href="mailto:contact@software.com" class="cta-button">이메일 보내기</a>
-        </section>
+            <div class="card-content">
+                <p>버튼 디자인, 페이지네이션 등 가벼운 UI/UX 요소들입니다.</p>
+                <img src="https://via.placeholder.com/300x150.png?text=Simple+Function+Preview" alt="Simple Function Preview">
+            </div>
+        </div>
+        <div class="bento-card">
+            <div class="card-header">
+                <h3>Components</h3>
+                <button class="copy-btn" data-code="{'type': 'component'}">Copy Code</button>
+            </div>
+            <div class="card-content">
+                <p>재사용 가능한 모듈형 에셋입니다. (메뉴, 로딩 스피너 등)</p>
+                <img src="https://via.placeholder.com/300x150.png?text=Component+Preview" alt="Component Preview">
+            </div>
+        </div>
+        <div class="bento-card">
+            <div class="card-header">
+                <h3>Page Templates</h3>
+                 <button class="copy-btn" data-code="{'type': 'template'}">Copy Code</button>
+            </div>
+            <div class="card-content">
+                <p>완성형 비즈니스 시나리오 템플릿입니다. (SharePoint 연동 게시판 등)</p>
+                 <img src="https://via.placeholder.com/300x150.png?text=Page+Template+Preview" alt="Page Template Preview">
+            </div>
+        </div>
     </main>
 
-    <footer>
-        <p>&copy; 2024 소프트웨어. 모든 권리 보유.</p>
-    </footer>
-
     <script src="main.js"></script>
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </body>
 </html>
